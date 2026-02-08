@@ -2,7 +2,7 @@ import { Router } from "express";
 import { createMatchSchema, listMatchesQuerySchema } from "../validation/matches.js";
 import { matches } from "../db/schema.js";
 import { getMatchStatus } from "../utils/match-status.js";
-import {db} from "../db/db.js";
+import { db } from "../db/db.js";
 import { desc } from "drizzle-orm";
 
 
@@ -14,7 +14,7 @@ matchRouter.get("/", async (req, res) => {
     const parsed = listMatchesQuerySchema.safeParse(req.query);
 
     if (!parsed.success) {
-        return res.status(400).json({error: "Invalid query", details: JSON.stringify(parsed.error)});
+        return res.status(400).json({ error: "Invalid query", details: JSON.stringify(parsed.error) });
     }
 
     const limit = Math.min(parsed.data.limit ?? 50, MAX_LIMIT);
@@ -23,7 +23,7 @@ matchRouter.get("/", async (req, res) => {
         const data = await db.select().from(matches).orderBy(desc(matches.createdAt)).limit(limit);
 
 
-        return res.status(200).json({data})
+        return res.status(200).json({ data })
 
     } catch (err) {
         console.error("Failed to list matches.", err);
@@ -37,10 +37,10 @@ matchRouter.post("/", async (req, res) => {
     const parsed = createMatchSchema.safeParse(req.body);
 
     if (!parsed.success) {
-        return res.status(400).json({error: "Invalid payload", details: JSON.stringify(parsed.error)})
+        return res.status(400).json({ error: "Invalid payload", details: JSON.stringify(parsed.error) })
     }
 
-    const {data: {startTime, endTime, homeScore, awayScore}} = parsed;
+    const { data: { startTime, endTime, homeScore, awayScore } } = parsed;
 
     try {
         const [event] = await db.insert(matches).values({
@@ -52,7 +52,11 @@ matchRouter.post("/", async (req, res) => {
             status: getMatchStatus(startTime, endTime)
         }).returning();
 
-        res.status(201).json({data: event});
+        if (res.app.locals.broadcastMatchCreated) {
+            res.app.locals.broadcastMatchCreated(event);
+        }
+
+        res.status(201).json({ data: event });
     } catch (err) {
         console.error("Failed to create a match.", err);
         return res.status(500).json({ error: "Failed to create a match." });

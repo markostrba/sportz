@@ -10,11 +10,11 @@ export const matches = pgTable('matches', {
   homeTeam: text('home_team').notNull(),
   awayTeam: text('away_team').notNull(),
   status: matchStatusEnum('status').notNull().default('scheduled'),
-  startTime: timestamp('start_time', { withTimezone: true }).notNull(),
-  endTime: timestamp('end_time', { withTimezone: true }),
+  startTime: timestamp('start_time').notNull(),
+  endTime: timestamp('end_time'),
   homeScore: integer('home_score').notNull().default(0),
   awayScore: integer('away_score').notNull().default(0),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 // Define the commentary table
@@ -32,6 +32,6 @@ export const commentary = pgTable('commentary', {
   message: text('message').notNull(),
   metadata: jsonb('metadata'),
   tags: text('tags').array(),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
